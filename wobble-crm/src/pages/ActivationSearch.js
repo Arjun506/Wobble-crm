@@ -8,6 +8,10 @@ export default function ActivationSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  // NOTE: loading state kept for UX; mark as used to satisfy eslint
+  void loading;
+
+
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {

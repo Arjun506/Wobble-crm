@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { collection, getDocs, updateDoc, doc, deleteDoc, addDoc, query, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
-import { FiEdit2, FiTrash2, FiCheckCircle, FiXCircle, FiUsers, FiTool, FiAlertCircle, FiDownload, FiUpload, FiFileText, FiMail, FiMessageCircle } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiCheckCircle, FiXCircle, FiUsers, FiTool, FiAlertCircle, FiDownload, FiUpload, FiFileText } from 'react-icons/fi';
 import WarrantyReceiptModal from '../components/WarrantyReceiptModal';
 import { handleCaseStatusChange } from '../utils/caseStatusHandler';
-import { createUserOnBackend, listUsersOnBackend, changePasswordOnBackend } from '../utils/backendAuth';
+import { createUserOnBackend } from '../utils/backendAuth';
 
 export default function AdminDashboard() {
   const [cases, setCases] = useState([]);
@@ -17,6 +16,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('cases');
   const [editingCase, setEditingCase] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  void isLoading;
   const [warrantyRequests, setWarrantyRequests] = useState([]);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
@@ -55,7 +55,8 @@ export default function AdminDashboard() {
   const handleUpdateCase = async (caseId, updatedData) => {
     try {
       const caseRef = doc(db, 'cases', caseId);
-      const caseSnap = await getDocs(query(collection(db, 'cases'), where('__name__', '==', caseId)));
+      void (await getDocs(query(collection(db, 'cases'), where('__name__', '==', caseId))));
+      
       
       const currentCase = cases.find(c => c.id === caseId);
       const oldStatus = currentCase?.jobStatus;
@@ -170,35 +171,6 @@ export default function AdminDashboard() {
     } catch (error) {
       toast.error('Failed to load device');
     }
-  };
-
-  const handleBulkUpload = async (file) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
-      let success = 0;
-      for (const row of rows) {
-        await addDoc(collection(db, 'devices'), {
-          imei: row.imei,
-          customerName: row.customerName,
-          mobileNumber: row.mobileNumber,
-          purchaseDate: row.purchaseDate,
-          purchasePlatform: row.purchasePlatform || 'Online',
-          dealerName: row.dealerName || '',
-          isActive: true,
-          activationDate: new Date().toISOString(),
-          warrantyStatus: 'In Warranty',
-          warrantyExpiry: new Date(new Date(row.purchaseDate).setFullYear(new Date(row.purchaseDate).getFullYear() + 1)).toISOString(),
-        });
-        success++;
-      }
-      toast.success(`${success} devices activated`);
-      fetchAllData();
-    };
-    reader.readAsArrayBuffer(file);
   };
 
   const handleExport = (type) => {

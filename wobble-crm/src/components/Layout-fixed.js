@@ -4,9 +4,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FiHome, FiSearch, FiPlusCircle, FiTool, FiCheckCircle, 
   FiPackage, FiBarChart2, FiUsers, FiLogOut, FiMenu, FiX, 
-  FiSettings, FiArrowLeft, FiBox, FiUpload, FiUser, FiChevronRight
+  FiSettings, FiArrowLeft, FiBox, FiUpload, FiChevronRight
 } from 'react-icons/fi';
-import BrandLogo, { BrandIcon } from '../components/BrandLogo';
+import { BrandIcon } from '../components/BrandLogo';
+
+
+
 
 
 export default function Layout({ children }) {

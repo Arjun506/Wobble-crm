@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
+
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { FiSave, FiAlertCircle, FiChevronRight, FiChevronLeft } from 'react-icons/fi';

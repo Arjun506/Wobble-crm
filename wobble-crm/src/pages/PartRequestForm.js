@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
@@ -19,11 +19,7 @@ export default function PartRequestForm() {
     issueDescription: '',
   });
 
-  useEffect(() => {
-    if (caseId) fetchCase();
-  }, [caseId]);
-
-  const fetchCase = async () => {
+  const fetchCase = useCallback(async () => {
     try {
       const docSnap = await getDoc(doc(db, 'cases', caseId));
       if (docSnap.exists()) {
@@ -34,8 +30,17 @@ export default function PartRequestForm() {
       }
     } catch (error) {
       toast.error('Error fetching case');
+      navigate('/cases/search');
     }
-  };
+  }, [caseId, navigate]);
+
+  useEffect(() => {
+    if (caseId) {
+      fetchCase();
+    } else {
+      navigate('/cases/search');
+    }
+  }, [caseId, fetchCase, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +59,8 @@ export default function PartRequestForm() {
         status: 'Pending Approval',
         requestedAt: new Date().toISOString(),
       };
-      const partRef = await addDoc(collection(db, 'partRequests'), partData);
+      await addDoc(collection(db, 'partRequests'), partData);
+
       
       // Send notification to customer about part request
       const notificationMsg = `Dear ${caseData.customerName}, we have received a part request for your case ${caseData.jobId}. Part: ${formData.partName}, Qty: ${Number(formData.quantity)}. This will be reviewed and you'll be notified shortly. - Wobble One`;

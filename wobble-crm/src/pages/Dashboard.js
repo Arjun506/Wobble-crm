@@ -6,10 +6,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import {
   FiPackage, FiCheckCircle, FiClock, FiAlertCircle, FiTrendingUp, FiUsers, FiTool,
-  FiEye, FiDownload, FiCheckCircle as FiApprove, FiXCircle, FiShield, FiBox, FiFileText
+  FiEye, FiDownload, FiCheckCircle as FiApprove, FiXCircle, FiShield, FiBox
+
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { BrandIcon } from '../components/BrandLogo';
+
 import WarrantyReceiptModal from '../components/WarrantyReceiptModal';
 
 export default function Dashboard() {
@@ -22,7 +23,6 @@ export default function Dashboard() {
   const [warrantyRequests, setWarrantyRequests] = useState([]);
   const [devices, setDevices] = useState([]);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState(null);
 
   const fetchUserServiceCenter = useCallback(() => {
     if (role === 'callcenter') setServiceCenterId(null);
@@ -180,22 +180,6 @@ export default function Dashboard() {
       fetchAllData();
     } catch (error) {
       toast.error('Rejection failed');
-    }
-  };
-
-  const handleGenerateReceipt = async (warrantyReq) => {
-    try {
-      const q = query(collection(db, 'devices'), where('imei', '==', warrantyReq.imei));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const device = { id: snap.docs[0].id, ...snap.docs[0].data() };
-        setSelectedDevice(device);
-        setReceiptModalOpen(true);
-      } else {
-        toast.error('Device not found');
-      }
-    } catch (error) {
-      toast.error('Failed to load device');
     }
   };
 
@@ -429,7 +413,7 @@ export default function Dashboard() {
       <WarrantyReceiptModal
         isOpen={receiptModalOpen}
         onClose={() => setReceiptModalOpen(false)}
-        deviceData={selectedDevice}
+        deviceData={null}
       />
     </div>
   );

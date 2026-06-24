@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -10,7 +11,8 @@ import {
   FiTool, FiPlusCircle, FiSmartphone
 } from 'react-icons/fi';
 import { sendWhatsApp, sendSMS, sendEmail, messageTemplates, templateLabels } from '../utils/messaging';
-import { handleCaseStatusChange, checkAndSendAutoCloseReminder } from '../utils/caseStatusHandler';
+import { checkAndSendAutoCloseReminder } from '../utils/caseStatusHandler';
+
 
 export default function CaseDetails() {
   const { id } = useParams();
@@ -24,7 +26,8 @@ export default function CaseDetails() {
   const [newNote, setNewNote] = useState('');
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('whatsapp');
-  const [toAddress, setToAddress] = useState({
+  const [toAddress] = useState({
+
     whatsapp: '8123889977',
     sms: '8123889977',
     email: 'support@wobble.in',
