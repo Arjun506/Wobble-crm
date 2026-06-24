@@ -1,13 +1,45 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import toast from 'react-hot-toast';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
 export function useAuth() {
   return useContext(AuthContext);
+}
+
+const deriveRoleFromEmail = (email) => {
+  if (!email) return 'callcenter';
+  const prefix = email.split('@')[0].toLowerCase();
+  const knownRoles = ['callcenter', 'service', 'warehouse', 'manager', 'tl', 'admin', 'sales'];
+  return knownRoles.includes(prefix) ? prefix : 'callcenter';
+};
+
+async function fetchUserProfile(email) {
+  if (!email) return null;
+  try {
+    const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+    const snapshot = await getDocs(usersQuery);
+    if (!snapshot.empty) {
+      const userData = snapshot.docs[0].data();
+      return {
+        id: snapshot.docs[0].id,
+        email: userData.email,
+        name: userData.name || email.split('@')[0],
+        role: userData.role || deriveRoleFromEmail(email),
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+  }
+  return {
+    id: null,
+    email,
+    name: email.split('@')[0],
+    role: deriveRoleFromEmail(email),
+  };
 }
 
 export function AuthProvider({ children }) {
@@ -16,60 +48,78 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          const userData = userDoc.exists() ? userDoc.data() : { role: 'callcenter', name: user.email };
-          setUser({ ...user, ...userData });
-          setRole(userData?.role || 'callcenter');
-        } catch (error) {
-          setUser(user);
-          setRole('callcenter');
-        }
+    const storedUser = localStorage.getItem('wobbleUser');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        setRole(parsed.role || 'callcenter');
+      } catch (error) {
+        console.error('Failed to parse stored user:', error);
+        localStorage.removeItem('wobbleUser');
+      }
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const profile = await fetchUserProfile(firebaseUser.email);
+        const currentUser = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: profile?.name || firebaseUser.email?.split('@')[0],
+          role: profile?.role || deriveRoleFromEmail(firebaseUser.email),
+        };
+        setUser(currentUser);
+        setRole(currentUser.role);
+        localStorage.setItem('wobbleUser', JSON.stringify(currentUser));
       } else {
         setUser(null);
         setRole(null);
+        localStorage.removeItem('wobbleUser');
       }
       setLoading(false);
     });
+
     return unsubscribe;
   }, []);
 
-  const getRoleFromEmail = (email) => {
-    const map = {
-      'callcenter@wobble.com': 'callcenter',
-      'service@wobble.com': 'service',
-      'warehouse@wobble.com': 'warehouse',
-      'admin@wobble.com': 'admin',
-      'sales@wobble.com': 'sales',
-    };
-    return map[email] || 'callcenter';
-  };
-
   const login = async (email, password) => {
+    if (!email || !password) {
+      return { success: false, error: 'Email and password are required' };
+    }
+
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      let userRole = getRoleFromEmail(result.user.email);
-      let userName = result.user.email;
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        userRole = data.role || userRole;
-        userName = data.name || userName;
-      }
-      setRole(userRole);
-      setUser({ ...result.user, role: userRole, name: userName });
-      toast.success('Welcome ' + userName);
-      return { success: true, role: userRole };
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      const profile = await fetchUserProfile(firebaseUser.email);
+      const currentUser = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: profile?.name || firebaseUser.email?.split('@')[0],
+        role: profile?.role || deriveRoleFromEmail(firebaseUser.email),
+      };
+
+      setUser(currentUser);
+      setRole(currentUser.role);
+      localStorage.setItem('wobbleUser', JSON.stringify(currentUser));
+
+      toast.success('Welcome ' + currentUser.name);
+      return { success: true, role: currentUser.role };
     } catch (error) {
-      toast.error(error.message);
-      return { success: false };
+      console.error('Login error:', error);
+      return { success: false, error: error.message || 'Login failed. Please check your email/password.' };
     }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    setUser(null);
+    setRole(null);
+    localStorage.removeItem('wobbleUser');
     toast.success('Logged out');
     window.location.href = '/login';
   };

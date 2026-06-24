@@ -6,6 +6,8 @@ import {
   FiPackage, FiBarChart2, FiUsers, FiLogOut, FiMenu, FiX, 
   FiSettings, FiArrowLeft, FiBox, FiUpload, FiUser, FiChevronRight
 } from 'react-icons/fi';
+import BrandLogo, { BrandIcon } from '../components/BrandLogo';
+
 
 export default function Layout({ children }) {
   const { role, user, logout } = useAuth();
@@ -38,6 +40,16 @@ export default function Layout({ children }) {
         { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: <FiUpload size={20} /> },
         { name: 'Service Centers', path: '/admin/centers', icon: <FiUsers size={20} /> },
       ],
+      manager: [
+        { name: 'Register Case', path: '/cases/register', icon: <FiPlusCircle size={20} /> },
+        { name: 'Approve Requests', path: '/admin/approvals', icon: <FiCheckCircle size={20} /> },
+        { name: 'Reports', path: '/reports', icon: <FiBarChart2 size={20} /> },
+      ],
+      tl: [
+        { name: 'Register Case', path: '/cases/register', icon: <FiPlusCircle size={20} /> },
+        { name: 'Search Cases', path: '/cases/search', icon: <FiSearch size={20} /> },
+        { name: 'Reports', path: '/reports', icon: <FiBarChart2 size={20} /> },
+      ],
       sales: [
         { name: 'Activate Device', path: '/sales/activate', icon: <FiBox size={20} /> },
         { name: 'Bulk Upload', path: '/sales/bulk-upload', icon: <FiUpload size={20} /> },
@@ -65,7 +77,7 @@ export default function Layout({ children }) {
         <button onClick={toggleSidebar} className="p-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">
           <FiMenu size={20} />
         </button>
-        <div className="header-text font-bold">Wobble One</div>
+        <BrandIcon className="w-10 h-10" />
         <div className="relative">
           <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold">
             {userInitial}
@@ -88,24 +100,34 @@ export default function Layout({ children }) {
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-0 lg:w-20'} overflow-hidden`}>
         {/* Logo & Toggle */}
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Wobble One</h1>
-                <p className="text-xs text-gray-400">CRM</p>
+        <div className="p-4 border-b border-gray-200">
+          {sidebarOpen ? (
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-white/90 p-3 transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                  <BrandIcon className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">Wobble CRM</p>
+                  <p className="text-xs text-slate-500">Service Dashboard</p>
+                </div>
               </div>
-            )}
-          </div>
-          <button onClick={toggleSidebar} className="text-gray-400 hover:text-gray-600">
-            {sidebarOpen ? <FiX size={20} /> : <FiChevronRight size={20} />}
-          </button>
+              <button onClick={toggleSidebar} className="text-gray-400 hover:text-gray-600 mt-1">
+                <FiX size={20} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                <BrandIcon className="w-6 h-6" />
+              </div>
+              <button onClick={toggleSidebar} className="text-gray-400 hover:text-gray-600">
+                <FiChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
+
 
         {/* Navigation */}
         <nav className="p-4 space-y-2">

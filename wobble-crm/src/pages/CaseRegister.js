@@ -1,24 +1,72 @@
 import React, { useState } from 'react';
-import { db, storage } from '../firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '../firebase';
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { FiSave, FiAlertCircle, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { sendAllNotifications } from '../utils/messaging';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CaseRegister() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    customerName: '', mobileNumber: '', alternateNumber: '', email: '',
-    addressPin: '', addressLocality: '', addressCity: '',
-    deviceModel: '', deviceVariant: '', deviceColor: '',
-    imei1: '', imei2: '', purchaseDate: '', issueType: '', subIssueType: '',
+    customerName: '',
+    mobileNumber: '',
+    alternateNumber: '',
+    email: '',
+    addressPin: '',
+    addressLocality: '',
+    addressCity: '',
+    deviceBrand: '',
+    deviceModel: '',
+    deviceVariant: '',
+    deviceColor: '',
+    imei1: '',
+    imei2: '',
+    purchaseDate: '',
+    issueType: '',
+    subIssueType: '',
   });
 
-  const issueTypes = ['Display Issue', 'Battery Issue', 'Charging Port', 'Camera Problem', 'Speaker Issue', 'Microphone Problem', 'Water Damage', 'Software Problem', 'Network Issue', 'Physical Damage', 'Motherboard Issue', 'Other'];
+  const issueTypes = [
+    'Display Issue',
+    'Battery Issue',
+    'Charging Port',
+    'Camera Problem',
+    'Speaker Issue',
+    'Microphone Problem',
+    'Water Damage',
+    'Software Problem',
+    'Network Issue',
+    'Physical Damage',
+    'Motherboard Issue',
+    'Other',
+  ];
+
+  const deviceOptions = [
+    'ACER SUPER ZX',
+    'WOBBLE ONE',
+  ];
+
+  const variantOptions = [
+    '8 / 128 GB',
+    '8 / 256 GB',
+    '12 / 256 GB',
+    '6 / 128 GB',
+    '4 / 128 GB',
+  ];
+
+  const colorOptions = [
+    'Carbon Black',
+    'Lunar Blue',
+    'Cosmic Green',
+    'Eclipse Black',
+    'Mythic White',
+    'Nova Blue',
+  ];
 
   const generateJobId = () => {
     const prefix = 'WOB';
@@ -74,15 +122,17 @@ export default function CaseRegister() {
         ...formData,
         jobId,
         warranty: calculateWarranty(formData.purchaseDate),
-        caseRegisterDate: new Date().toISOString(),
+        caseRegisterDate: serverTimestamp(),
         jobStatus: 'Open',
         diagnosis: '',
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        createdBy: user?.email || 'anonymous',
+        createdByUid: user?.id || null,
         previousIssues: [],
         photos: [],
         jobNotes: [],
         partRequests: [],
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
         reminderSent: false,
         reminderCount: 0,
       };
@@ -122,65 +172,145 @@ export default function CaseRegister() {
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
+  const stepHint = {
+    1: 'Fill the customer contact and address details to start the case registration.',
+    2: 'Select device model, variant and color, then enter imei details for the mobile.',
+    3: 'Choose the issue type and add any sub issue information to help the technician.',
+  };
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Register New Case</h2>
-        <div className="flex items-center gap-2 mt-4">
-          <div className={`h-2 w-1/3 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-slate-600'}`}></div>
-          <div className={`h-2 w-1/3 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-slate-600'}`}></div>
-          <div className={`h-2 w-1/3 rounded-full ${step >= 3 ? 'bg-blue-600' : 'bg-slate-600'}`}></div>
+    <div className="min-h-screen py-12 bg-slate-100">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="rounded-[2rem] border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-8 text-white">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Register New Case</h2>
+                <p className="mt-2 text-sm text-blue-100 max-w-2xl">Start with customer details, then add the device and issue information in the same full-width registration form.</p>
+              </div>
+              <div className="rounded-3xl bg-white/10 border border-white/15 px-4 py-3 text-sm font-semibold">Step {step} of 3</div>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {['Customer', 'Device', 'Issue'].map((label, index) => (
+                <div key={label} className={`rounded-3xl px-4 py-3 text-center text-sm ${step === index + 1 ? 'bg-white text-slate-900 shadow-lg' : 'bg-white/10 text-blue-100'}`}>
+                  {label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-8">
+            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+              <div className="mb-6 rounded-3xl border border-dashed border-slate-200 bg-white/80 p-5 text-sm text-slate-700">
+                <p className="font-semibold">What to update</p>
+                <p className="mt-2 text-slate-600">{stepHint[step]}</p>
+              </div>
+
+              {step > 1 && (
+                <div className="mb-6 grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Customer</p>
+                    <p className="mt-2 font-semibold text-slate-900">{formData.customerName || 'Not set yet'}</p>
+                    <p className="mt-1 text-sm text-slate-500">{formData.mobileNumber || 'Mobile not entered'}</p>
+                  </div>
+                  <div className="rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Device</p>
+                    <p className="mt-2 font-semibold text-slate-900">{formData.deviceModel || 'Model pending'}</p>
+                    <p className="mt-1 text-sm text-slate-500">{formData.deviceVariant || 'Variant pending'}</p>
+                  </div>
+                  <div className="rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Color</p>
+                    <p className="mt-2 font-semibold text-slate-900">{formData.deviceColor || 'Not selected'}</p>
+                    <p className="mt-1 text-sm text-slate-500">{formData.imei1 ? `IMEI 1 • ${formData.imei1}` : 'IMEI pending'}</p>
+                  </div>
+                </div>
+              )}
+
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="customerName" value={formData.customerName} onChange={handleChange} placeholder="Full Name *" className="input-field" required />
+                    <input name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="Mobile Number *" className="input-field" required />
+                    <input name="alternateNumber" value={formData.alternateNumber} onChange={handleChange} placeholder="Alternate Number" className="input-field" />
+                    <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input-field" />
+                    <input name="addressPin" value={formData.addressPin} onChange={handleChange} placeholder="PIN Code" className="input-field" />
+                    <input name="addressLocality" value={formData.addressLocality} onChange={handleChange} placeholder="Locality" className="input-field" />
+                    <div className="md:col-span-2"><input name="addressCity" value={formData.addressCity} onChange={handleChange} placeholder="City" className="input-field" /></div>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button onClick={nextStep} className="btn-primary flex-1 flex items-center justify-center gap-2">Next <FiChevronRight /></button>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Device Model</label>
+                      <select name="deviceModel" value={formData.deviceModel} onChange={handleChange} className="input-field">
+                        <option value="">Select model</option>
+                        {deviceOptions.map(model => <option key={model} value={model}>{model}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Variant</label>
+                      <select name="deviceVariant" value={formData.deviceVariant} onChange={handleChange} className="input-field">
+                        <option value="">Select variant</option>
+                        {variantOptions.map(variant => <option key={variant} value={variant}>{variant}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Color</label>
+                      <select name="deviceColor" value={formData.deviceColor} onChange={handleChange} className="input-field">
+                        <option value="">Select color</option>
+                        {colorOptions.map(color => <option key={color} value={color}>{color}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Purchase Date</label>
+                      <input name="purchaseDate" type="date" value={formData.purchaseDate} onChange={handleChange} className="input-field" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">IMEI 1</label>
+                      <input name="imei1" value={formData.imei1} onChange={handleChange} placeholder="IMEI 1" className="input-field" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">IMEI 2</label>
+                      <input name="imei2" value={formData.imei2} onChange={handleChange} placeholder="IMEI 2" className="input-field" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button onClick={prevStep} className="btn-secondary flex items-center justify-center gap-2"><FiChevronLeft /> Back</button>
+                    <button onClick={nextStep} className="btn-primary flex-1 flex items-center justify-center gap-2">Next <FiChevronRight /></button>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Issue Type</label>
+                      <select name="issueType" value={formData.issueType} onChange={handleChange} className="input-field">
+                        <option value="">Select issue type</option>
+                        {issueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Sub Issue / Notes</label>
+                      <input name="subIssueType" value={formData.subIssueType} onChange={handleChange} placeholder="Sub issue or extra notes" className="input-field" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button onClick={prevStep} className="btn-secondary flex items-center justify-center gap-2"><FiChevronLeft /> Back</button>
+                    <button onClick={handleSubmit} disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2"><FiSave /> {loading ? 'Processing...' : 'Register Case'}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="card">
-        {step === 1 && (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Customer Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input name="customerName" value={formData.customerName} onChange={handleChange} placeholder="Full Name *" className="input-field" required />
-              <input name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} placeholder="Mobile Number *" className="input-field" required />
-              <input name="alternateNumber" value={formData.alternateNumber} onChange={handleChange} placeholder="Alternate Number" className="input-field" />
-              <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="input-field" />
-              <input name="addressPin" value={formData.addressPin} onChange={handleChange} placeholder="PIN Code" className="input-field" />
-              <input name="addressLocality" value={formData.addressLocality} onChange={handleChange} placeholder="Locality" className="input-field" />
-              <div className="md:col-span-2"><input name="addressCity" value={formData.addressCity} onChange={handleChange} placeholder="City" className="input-field" /></div>
-            </div>
-            <button onClick={nextStep} className="btn-primary w-full flex items-center justify-center gap-2">Next <FiChevronRight /></button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Device Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input name="deviceModel" value={formData.deviceModel} onChange={handleChange} placeholder="Model" className="input-field" />
-              <input name="deviceVariant" value={formData.deviceVariant} onChange={handleChange} placeholder="Variant (RAM/Storage)" className="input-field" />
-              <input name="deviceColor" value={formData.deviceColor} onChange={handleChange} placeholder="Color" className="input-field" />
-              <input name="purchaseDate" type="date" value={formData.purchaseDate} onChange={handleChange} className="input-field" />
-              <input name="imei1" value={formData.imei1} onChange={handleChange} placeholder="IMEI 1" className="input-field" />
-              <input name="imei2" value={formData.imei2} onChange={handleChange} placeholder="IMEI 2" className="input-field" />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={prevStep} className="btn-secondary flex items-center gap-2"><FiChevronLeft /> Back</button>
-              <button onClick={nextStep} className="btn-primary flex-1 flex items-center justify-center gap-2">Next <FiChevronRight /></button>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Issue Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select name="issueType" value={formData.issueType} onChange={handleChange} className="input-field"><option value="">Select Issue Type</option>{issueTypes.map(t => <option key={t}>{t}</option>)}</select>
-              <input name="subIssueType" value={formData.subIssueType} onChange={handleChange} placeholder="Sub Issue Type" className="input-field" />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={prevStep} className="btn-secondary flex items-center gap-2"><FiChevronLeft /> Back</button>
-              <button onClick={handleSubmit} disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2"><FiSave /> {loading ? 'Processing...' : 'Register Case'}</button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -150,6 +150,32 @@ export const sendRepairVisitNotification = async (caseData) => {
 };
 
 /**
+ * Send auto-close reminder if case is not visited within 5 days
+ */
+export const sendAutoCloseReminder = async (caseData) => {
+  const { mobileNumber, email, customerName, jobId, caseRegisterDate } = caseData;
+  const daysSinceRegister = Math.floor((new Date() - new Date(caseRegisterDate)) / (1000 * 60 * 60 * 24));
+  
+  if (daysSinceRegister < 5) return { success: false, error: 'Case is less than 5 days old' };
+
+  const msg = `Dear ${customerName}, your case ${jobId} has been open for ${daysSinceRegister} days without a visit. If you don't collect your phone within 2 days, we may auto-close this case. Please visit our service center or contact us immediately. - Wobble One`;
+
+  const results = {};
+  if (mobileNumber) {
+    results.whatsapp = await sendWhatsApp(mobileNumber, msg, jobId);
+    results.sms = await sendSMS(mobileNumber, msg, jobId);
+  }
+  if (email) {
+    results.email = await sendEmail(email, `Urgent: Visit Required – Case ${jobId}`, msg, {
+      job_id: jobId,
+      customer_name: customerName,
+      days_since: daysSinceRegister,
+    });
+  }
+  return results;
+};
+
+/**
  * Template library for manual messages
  */
 export const messageTemplates = {
@@ -160,6 +186,7 @@ export const messageTemplates = {
     ready: (c) => `Dear ${c.customerName}, your device for case *${c.jobId}* is ready for pickup. Please visit *${c.serviceCenterName || 'Wobble One Main Center'}*. - Wobble One`,
     reminder: (c) => `Reminder: Your case *${c.jobId}* is still open. Please visit the service center or contact us for assistance. - Wobble One`,
     repairDone: (c) => `Dear ${c.customerName}, your mobile repair for case *${c.jobId}* is done. Please collect your phone from *${c.serviceCenterName || 'Wobble One Main Center'}*. Contact: ${c.serviceCenterContact || '+91 98765 43210'}. - Wobble One`,
+    autoClose: (c) => `Dear ${c.customerName}, your case *${c.jobId}* will auto-close soon if not collected. Please visit *${c.serviceCenterName || 'Wobble One Main Center'}* within 2 days. - Wobble One`,
     custom: (c, text) => text,
   },
   sms: {
@@ -169,6 +196,7 @@ export const messageTemplates = {
     ready: (c) => `Dear ${c.customerName}, case ${c.jobId} device ready for pickup. Visit service center. - Wobble One`,
     reminder: (c) => `Reminder: Case ${c.jobId} open. Visit service center or call us. - Wobble One`,
     repairDone: (c) => `Dear ${c.customerName}, your mobile repair for case ${c.jobId} is done. Please collect your phone from ${c.serviceCenterName || 'Wobble One Main Center'}. Contact: ${c.serviceCenterContact || '+91 98765 43210'}. - Wobble One`,
+    autoClose: (c) => `Dear ${c.customerName}, case ${c.jobId} will auto-close soon. Visit service center within 2 days. - Wobble One`,
     custom: (c, text) => text,
   },
   email: {
@@ -178,6 +206,7 @@ export const messageTemplates = {
     ready: (c) => `Dear ${c.customerName},\n\nGreat news! Your device for case <b>${c.jobId}</b> is ready for pickup. Please visit:\n\n${c.serviceCenterName || 'Wobble One Main Center'}\n\nRegards,\nWobble One`,
     reminder: (c) => `Dear ${c.customerName},\n\nThis is a friendly reminder that your case <b>${c.jobId}</b> is still open. Please visit the service center or contact us for assistance.\n\nRegards,\nWobble One`,
     repairDone: (c) => `Dear ${c.customerName},\n\nYour mobile repair for case <b>${c.jobId}</b> is completed. Please collect your phone from:\n\n${c.serviceCenterName || 'Wobble One Main Center'}\nContact: ${c.serviceCenterContact || '+91 98765 43210'}\n\nRegards,\nWobble One`,
+    autoClose: (c) => `Dear ${c.customerName},\n\nYour case <b>${c.jobId}</b> will be automatically closed if not collected within 2 days. Please visit our service center:\n\n${c.serviceCenterName || 'Wobble One Main Center'}\nContact: ${c.serviceCenterContact || '+91 98765 43210'}\n\nRegards,\nWobble One`,
     custom: (c, text) => text,
   },
 };
@@ -189,6 +218,7 @@ export const templateLabels = {
   ready: 'Ready for Pickup',
   reminder: 'Reminder to Visit',
   repairDone: 'Repair Done - Collect Phone',
+  autoClose: 'Auto-Close Warning (5+ days)',
   custom: 'Custom Message',
 };
 

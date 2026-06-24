@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { FiTool } from 'react-icons/fi';
+import { sendAllNotifications } from '../utils/messaging';
 
 export default function PartRequestForm() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function PartRequestForm() {
     }
     setLoading(true);
     try {
-      await addDoc(collection(db, 'partRequests'), {
+      const partData = {
         caseId,
         partName: formData.partName,
         quantity: Number(formData.quantity),
@@ -52,11 +53,30 @@ export default function PartRequestForm() {
         issueDescription: formData.issueDescription,
         status: 'Pending Approval',
         requestedAt: new Date().toISOString(),
-      });
-      toast.success('Part request submitted');
+      };
+      const partRef = await addDoc(collection(db, 'partRequests'), partData);
+      
+      // Send notification to customer about part request
+      const notificationMsg = `Dear ${caseData.customerName}, we have received a part request for your case ${caseData.jobId}. Part: ${formData.partName}, Qty: ${Number(formData.quantity)}. This will be reviewed and you'll be notified shortly. - Wobble One`;
+      
+      try {
+        await sendAllNotifications(
+          caseData.mobileNumber,
+          caseData.email,
+          caseData.customerName,
+          caseData.jobId,
+          caseData.deviceModel,
+          'Part Request: ' + formData.partName,
+          notificationMsg
+        );
+      } catch (notifErr) {
+        console.error('Notification error:', notifErr);
+      }
+      
+      toast.success('Part request submitted & customer notified');
       navigate('/cases/search');
     } catch (error) {
-      toast.error('Submission failed');
+      toast.error('Submission failed: ' + error.message);
     } finally {
       setLoading(false);
     }

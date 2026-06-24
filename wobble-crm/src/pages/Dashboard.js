@@ -9,6 +9,7 @@ import {
   FiEye, FiDownload, FiCheckCircle as FiApprove, FiXCircle, FiShield, FiBox, FiFileText
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { BrandIcon } from '../components/BrandLogo';
 import WarrantyReceiptModal from '../components/WarrantyReceiptModal';
 
 export default function Dashboard() {
@@ -83,6 +84,17 @@ export default function Dashboard() {
     totalDevices: role === 'sales' ? devices.length : 0,
     activeDevices: role === 'sales' ? devices.filter(d => d.isActive === true).length : 0,
     inWarrantyDevices: role === 'sales' ? devices.filter(d => d.warrantyStatus === 'In Warranty').length : 0,
+  };
+
+  const statGradientMap = {
+    blue: 'from-blue-500 to-blue-600',
+    green: 'from-emerald-500 to-emerald-600',
+    yellow: 'from-amber-500 to-amber-600',
+    orange: 'from-orange-500 to-orange-600',
+    purple: 'from-violet-500 to-violet-600',
+    gray: 'from-slate-500 to-slate-600',
+    indigo: 'from-indigo-500 to-indigo-600',
+    teal: 'from-teal-500 to-teal-600',
   };
 
   const handleCardClick = (filterType) => {
@@ -243,9 +255,14 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Welcome back, {user?.name || user?.email?.split('@')[0]}!</h2>
-        <p className="text-gray-500 mt-1">{serviceCenterId ? `Service Center: ${serviceCenterId}` : 'All Centers'}</p>
+      <div className="relative card mb-8 overflow-hidden p-8 bg-gradient-to-br from-white to-slate-100 border border-slate-200 shadow-xl">
+        <div className="pointer-events-none absolute right-6 top-6 text-[clamp(3.5rem,6vw,7.5rem)] font-black tracking-[0.5em] text-slate-900/5 uppercase">
+          Wobble CRM
+        </div>
+        <div className="relative pt-2">
+          <h2 className="text-3xl font-bold text-slate-900">Welcome back, {user?.name || user?.email?.split('@')[0]}!</h2>
+          <p className="text-slate-600 mt-1">{serviceCenterId ? `Service Center: ${serviceCenterId}` : 'All Centers'}</p>
+        </div>
       </div>
 
       {/* Stat Cards */}
@@ -257,15 +274,15 @@ export default function Dashboard() {
             className={`relative rounded-2xl p-4 text-left transition-all duration-200 hover:scale-105 hover:shadow-xl ${
               isActive(card.key)
                 ? 'ring-2 ring-white/50 shadow-2xl bg-gradient-to-br from-blue-500 to-purple-600'
-                : `bg-gradient-to-br from-${card.color}-600 to-${card.color}-700`
+                : `bg-gradient-to-br ${statGradientMap[card.color] || 'from-slate-500 to-slate-600'}`
             }`}
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-white/80 text-xs">{card.label}</p>
+                <p className="text-white text-xs">{card.label}</p>
                 <p className="text-2xl font-bold text-white">{card.value}</p>
               </div>
-              <div className="text-white/60 text-xl">{card.icon}</div>
+              <div className="text-white text-xl">{card.icon}</div>
             </div>
             {isActive(card.key) && (
               <div className="absolute inset-x-0 bottom-0 h-1 bg-white/40 rounded-b-2xl" />

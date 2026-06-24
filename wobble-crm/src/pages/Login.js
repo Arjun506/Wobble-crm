@@ -6,7 +6,7 @@ import {
   FiMail, FiLock, FiLogIn 
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import BrandLogo from '../components/BrandLogo';
+import BrandLogo, { BrandIcon } from '../components/BrandLogo';
 
 export default function Login() {
   const { login } = useAuth();
@@ -19,11 +19,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const roleCredentials = {
-    callcenter: { email: 'callcenter@wobble.com', password: 'callcenter123', label: 'Call Center', icon: FiUser, color: 'from-blue-500 to-blue-600' },
-    servicecenter: { email: 'service@wobble.com', password: 'service123', label: 'Service Center', icon: FiPhone, color: 'from-green-500 to-green-600' },
-    warehouse: { email: 'warehouse@wobble.com', password: 'warehouse123', label: 'Warehouse', icon: FiPackage, color: 'from-yellow-500 to-yellow-600' },
-    admin: { email: 'admin@wobble.com', password: 'admin123', label: 'Admin', icon: FiShield, color: 'from-red-500 to-red-600' },
-    sales: { email: 'sales@wobble.com', password: 'sales123', label: 'Sales Team', icon: FiTrendingUp, color: 'from-purple-500 to-purple-600' }
+    callcenter: { email: 'callcenter@wobble.com', password: '654321', label: 'Call Center', icon: FiUser, color: 'from-blue-500 to-blue-600' },
+    service: { email: 'service@wobble.com', password: '654321', label: 'Service Center', icon: FiPhone, color: 'from-green-500 to-green-600' },
+    warehouse: { email: 'warehouse@wobble.com', password: '654321', label: 'Warehouse', icon: FiPackage, color: 'from-yellow-500 to-yellow-600' },
+    manager: { email: 'manager@wobble.com', password: '654321', label: 'Manager', icon: FiShield, color: 'from-cyan-500 to-blue-600' },
+    tl: { email: 'tl@wobble.com', password: '654321', label: 'Team Lead', icon: FiUser, color: 'from-slate-500 to-slate-700' },
+    admin: { email: 'admin@wobble.com', password: '654321', label: 'Admin', icon: FiShield, color: 'from-red-500 to-red-600' },
+    sales: { email: 'sales@wobble.com', password: '654321', label: 'Sales Team', icon: FiTrendingUp, color: 'from-purple-500 to-purple-600' }
   };
 
   const handleRoleSelect = (roleKey) => {
@@ -37,6 +39,10 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.email || !formData.password) {
+      toast.error('Email and password are required');
+      return;
+    }
     setLoading(true);
     try {
       const result = await login(formData.email, formData.password);
@@ -44,10 +50,11 @@ export default function Login() {
         toast.success(`Welcome ${roleCredentials[formData.role].label}!`);
         navigate('/dashboard');
       } else {
-        toast.error('Invalid credentials!');
+        toast.error(result.error || 'Invalid credentials!');
       }
     } catch (error) {
-      toast.error('Login failed. Please try again.');
+      console.error('Login submit error:', error);
+      toast.error(error?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -93,7 +100,9 @@ export default function Login() {
           {/* Login form */}
           <div className="bg-white backdrop-blur-md rounded-3xl p-8 border border-gray-200 shadow-2xl">
             <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-3xl shadow-lg">📱</div>
+              <div className="w-24 h-24 mx-auto rounded-3xl shadow-xl overflow-hidden bg-white p-3">
+                <BrandIcon className="w-full h-full" />
+              </div>
               <h2 className="text-2xl font-bold text-gray-800 mt-4">Login to your account</h2>
               <p className="text-gray-500 text-sm mt-1">as {currentRole.label}</p>
             </div>
@@ -110,7 +119,8 @@ export default function Login() {
                 {loading ? <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div> : <><FiLogIn size={20} /> Login as {currentRole.label}</>}
               </button>
             </form>
-            <p className="text-center text-gray-500 text-xs mt-6">Demo credentials pre-filled. Select a role to auto‑fill.</p>
+            <p className="text-center text-gray-500 text-xs mt-6">Firebase auth is active. Use your Firebase email/password to log in.</p>
+            <p className="text-center text-amber-600 text-xs mt-2 font-semibold">Default password: 654321</p>
           </div>
         </div>
       </div>

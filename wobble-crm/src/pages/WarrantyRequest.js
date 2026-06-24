@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+
 import { FiSave, FiSearch, FiFileText } from 'react-icons/fi';
 import WarrantyReceiptModal from '../components/WarrantyReceiptModal';
+import { sendAllNotifications } from '../utils/messaging';
+
 
 export default function WarrantyRequest() {
-  const navigate = useNavigate();
+
+
   const [imei, setImei] = useState('');
   const [device, setDevice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -48,10 +51,27 @@ export default function WarrantyRequest() {
         extendedYears: 1,
         reason: reason,
       });
-      toast.success('Warranty extension request sent to admin');
+      
+      // Send warranty request notification to customer
+      const warrantyMsg = `Dear ${device.customerName}, we have received your warranty extension request for device ${device.imei}. This will be reviewed and you'll be notified about the status within 24-48 hours. - Wobble One`;
+      try {
+        await sendAllNotifications(
+          device.mobileNumber,
+          device.email,
+          device.customerName,
+          device.imei,
+          device.deviceModel || 'Device',
+          'Warranty Extension Request',
+          warrantyMsg
+        );
+      } catch (notifErr) {
+        console.error('Notification error:', notifErr);
+      }
+      
+      toast.success('Warranty extension request sent & customer notified');
       setReason('');
     } catch (error) {
-      toast.error('Request failed');
+      toast.error('Request failed: ' + error.message);
     } finally {
       setLoading(false);
     }

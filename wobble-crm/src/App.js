@@ -38,9 +38,9 @@ function App() {
           <Route path="/cases/register" element={<ProtectedRoute allowedRoles={['callcenter','service','admin']}><Layout><CaseRegister /></Layout></ProtectedRoute>} />
           <Route path="/service/case/:id" element={<ProtectedRoute allowedRoles={['service','admin']}><Layout><ServiceCaseDetail /></Layout></ProtectedRoute>} />
           <Route path="/part-requests/new" element={<ProtectedRoute allowedRoles={['service','admin']}><Layout><PartRequestForm /></Layout></ProtectedRoute>} />
-          <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin']}><Layout><PartRequestApproval /></Layout></ProtectedRoute>} />
+          <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin','manager']}><Layout><PartRequestApproval /></Layout></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><Layout><Reports /></Layout></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin','manager','tl']}><Layout><Reports /></Layout></ProtectedRoute>} />
 
           {/* Warehouse */}
           <Route path="/warehouse/dispatch" element={<ProtectedRoute allowedRoles={['warehouse', 'admin']}><Layout><WarehouseDispatch /></Layout></ProtectedRoute>} />

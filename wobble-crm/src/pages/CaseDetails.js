@@ -10,6 +10,7 @@ import {
   FiTool, FiPlusCircle, FiSmartphone
 } from 'react-icons/fi';
 import { sendWhatsApp, sendSMS, sendEmail, messageTemplates, templateLabels } from '../utils/messaging';
+import { handleCaseStatusChange, checkAndSendAutoCloseReminder } from '../utils/caseStatusHandler';
 
 export default function CaseDetails() {
   const { id } = useParams();
@@ -23,6 +24,12 @@ export default function CaseDetails() {
   const [newNote, setNewNote] = useState('');
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('whatsapp');
+  const [toAddress, setToAddress] = useState({
+    whatsapp: '8123889977',
+    sms: '8123889977',
+    email: 'support@wobble.in',
+  });
+
   const [selectedTemplate, setSelectedTemplate] = useState('greeting');
   const [customMessage, setCustomMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -37,11 +44,27 @@ export default function CaseDetails() {
         const data = { id: docSnap.id, ...docSnap.data() };
         setCaseData(data);
         setEditData(data);
+
+        // Check for auto-close reminder
+        if (data.jobStatus === 'Open') {
+          const reminderNeeded = await checkAndSendAutoCloseReminder(data);
+          if (reminderNeeded === true) {
+            toast('Auto-close reminder sent to customer', { icon: '📬' });
+          } else if (reminderNeeded === 'auto-close-needed') {
+            toast.custom((t) => (
+              <div className="bg-red-500 text-white p-4 rounded-xl shadow-xl">
+                <p className="font-bold">Case is eligible for auto-close</p>
+                <p className="text-sm mt-1">This case is 7+ days old. Consider closing it or contacting the customer.</p>
+              </div>
+            ), { duration: 5000 });
+          }
+        }
       } else {
         toast.error('Case not found');
         navigate('/cases/search');
       }
     } catch (error) {
+      console.error('Error fetching case data:', error);
       toast.error('Error fetching case');
     } finally {
       setLoading(false);
@@ -154,15 +177,28 @@ export default function CaseDetails() {
     try {
       let result;
       if (selectedChannel === 'whatsapp') {
-        if (!caseData.mobileNumber) { toast.error('Customer mobile number missing'); return; }
-        result = await sendWhatsApp(caseData.mobileNumber, message, caseData.jobId);
+        const to = caseData.mobileNumber || toAddress.whatsapp;
+        if (!to) {
+          toast.error('WhatsApp number missing');
+          return;
+        }
+        result = await sendWhatsApp(to, message, caseData.jobId);
       } else if (selectedChannel === 'sms') {
-        if (!caseData.mobileNumber) { toast.error('Customer mobile number missing'); return; }
-        result = await sendSMS(caseData.mobileNumber, message, caseData.jobId);
+        const to = caseData.mobileNumber || toAddress.sms;
+        if (!to) {
+          toast.error('SMS number missing');
+          return;
+        }
+        result = await sendSMS(to, message, caseData.jobId);
       } else if (selectedChannel === 'email') {
-        if (!caseData.email) { toast.error('Customer email missing'); return; }
-        result = await sendEmail(caseData.email, `Update on your case ${caseData.jobId}`, message, {
-          job_id: caseData.jobId, customer_name: caseData.customerName,
+        const to = caseData.email || toAddress.email;
+        if (!to) {
+          toast.error('Email address missing');
+          return;
+        }
+        result = await sendEmail(to, `Update on your case ${caseData.jobId}`, message, {
+          job_id: caseData.jobId,
+          customer_name: caseData.customerName,
         });
       }
       if (result?.success) {
@@ -370,14 +406,27 @@ export default function CaseDetails() {
             )}
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 mb-2 font-medium">1. Select Message Channel</label>
-                <select className="input-field" value={selectedChannel} onChange={(e) => { setSelectedChannel(e.target.value); setSelectedTemplate('greeting'); setMessageMode('template'); }}>
-                  <option value="whatsapp">≡ƒô▒ WhatsApp Message</option>
-                  <option value="sms">≡ƒÆ¼ SMS / Text Message</option>
-                  <option value="email">≡ƒôº Email Message</option>
-                </select>
-              </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-medium">1. Select Message Channel</label>
+                  <select
+                    className="input-field"
+                    value={selectedChannel}
+                    onChange={(e) => {
+                      setSelectedChannel(e.target.value);
+                      setSelectedTemplate('greeting');
+                      setMessageMode('template');
+                      setCustomMessage('');
+                    }}
+                  >
+                    <option value="whatsapp">WhatsApp Message</option>
+                    <option value="sms">SMS / Text Message</option>
+                    <option value="email">Email Message</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    You can send the same message to WhatsApp, SMS, or Email.
+                  </p>
+                </div>
+
 
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">2. Message Type</label>

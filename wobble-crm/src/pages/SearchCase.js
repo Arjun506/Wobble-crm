@@ -11,7 +11,8 @@ export default function SearchCase() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { role } = useAuth();
+
+
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {

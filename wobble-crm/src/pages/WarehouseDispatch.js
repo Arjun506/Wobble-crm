@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/fire
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
 import { FiTruck, FiUpload } from 'react-icons/fi';
+import { sendAllNotifications } from '../utils/messaging';
 
 export default function WarehouseDispatch() {
   const [requests, setRequests] = useState([]);
@@ -50,7 +51,7 @@ export default function WarehouseDispatch() {
     setCourierDetails(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   };
 
-  const handleDispatch = async (requestId, caseId, requestedQty) => {
+  const handleDispatch = async (requestId, caseId, requestedQty, caseData) => {
     const dispatchQty = dispatchQuantities[requestId];
     const receiptFile = dispatchFiles[requestId];
     const courier = courierDetails[requestId];
@@ -91,7 +92,26 @@ export default function WarehouseDispatch() {
         packageWeight: packageWeights[requestId] || '',
       });
       await updateDoc(doc(db, 'cases', caseId), { jobStatus: 'Part Dispatched' });
-      toast.success('Part dispatched successfully');
+      
+      // Send dispatch notification to customer
+      if (caseData) {
+        const dispatchMsg = `Dear ${caseData.customerName}, your part for case ${caseData.jobId} has been dispatched! Courier: ${courier.name}, Tracking ID: ${courier.trackingId}. Expected delivery: ${expectedDeliveryDates[requestId] || 'Soon'}. - Wobble One`;
+        try {
+          await sendAllNotifications(
+            caseData.mobileNumber,
+            caseData.email,
+            caseData.customerName,
+            caseData.jobId,
+            caseData.deviceModel,
+            'Part Dispatched',
+            dispatchMsg
+          );
+        } catch (notifErr) {
+          console.error('Notification error:', notifErr);
+        }
+      }
+      
+      toast.success('Part dispatched & customer notified');
       fetchRequests();
       setDispatchFiles({});
       setCourierDetails({});

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { FiPackage, FiCheckCircle, FiClock, FiTrendingUp, FiBox, FiFileText, FiMail, FiMessageCircle, FiEye } from 'react-icons/fi';
+import { FiPackage, FiCheckCircle, FiClock, FiTrendingUp, FiBox, FiFileText } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import WarrantyReceiptModal from '../components/WarrantyReceiptModal';
 
 export default function SalesDashboard() {
-  const { user } = useAuth();
+
+
+
+
+
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
