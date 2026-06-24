@@ -48,18 +48,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('wobbleUser');
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setUser(parsed);
-        setRole(parsed.role || 'callcenter');
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('wobbleUser');
-      }
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await fetchUserProfile(firebaseUser.email);

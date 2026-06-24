@@ -4,13 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxuXIdHcjxMflUxN5JR9VKCZdU5cUQEFo",
-  authDomain: "wobble-one-crm-a.firebaseapp.com",
-  projectId: "wobble-one-crm-a",
-  storageBucket: "wobble-one-crm-a.firebasestorage.app",
-  messagingSenderId: "543691399169",
-  appId: "1:543691399169:web:83463a71d7b39972822000",
-  measurementId: "G-G7TYLZTN4C"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyCxuXIdHcjxMflUxN5JR9VKCZdU5cUQEFo",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "wobble-one-crm-a.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "wobble-one-crm-a",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "wobble-one-crm-a.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "543691399169",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:543691399169:web:83463a71d7b39972822000",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-G7TYLZTN4C",
 };
 
 const app = initializeApp(firebaseConfig);
