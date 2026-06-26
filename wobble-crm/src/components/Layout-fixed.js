@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FiHome, FiSearch, FiPlusCircle, FiTool, FiCheckCircle, 
   FiPackage, FiBarChart2, FiUsers, FiLogOut, FiMenu, FiX, 
-  FiSettings, FiArrowLeft, FiBox, FiUpload, FiChevronRight
+  FiSettings, FiArrowLeft, FiBox, FiUpload, FiChevronRight, FiLayers
 } from 'react-icons/fi';
 import { BrandIcon } from '../components/BrandLogo';
 
@@ -34,7 +34,10 @@ export default function Layout({ children }) {
         { name: 'Register Case', path: '/cases/register', icon: <FiPlusCircle size={20} /> },
         { name: 'Raise Part Request', path: '/part-requests/new', icon: <FiTool size={20} /> },
       ],
-      warehouse: [{ name: 'Dispatch Parts', path: '/warehouse/dispatch', icon: <FiPackage size={20} /> }],
+      warehouse: [
+        { name: 'Inventory & Stock', path: '/warehouse/inventory', icon: <FiLayers size={20} /> },
+        { name: 'Dispatch Parts', path: '/warehouse/dispatch', icon: <FiPackage size={20} /> },
+      ],
       admin: [
         { name: 'Register Case', path: '/cases/register', icon: <FiPlusCircle size={20} /> },
         { name: 'Approve Requests', path: '/admin/approvals', icon: <FiCheckCircle size={20} /> },

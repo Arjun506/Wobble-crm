@@ -13,6 +13,7 @@ import ServiceCaseDetail from './pages/ServiceCaseDetail';
 import PartRequestForm from './pages/PartRequestForm';
 import PartRequestApproval from './pages/PartRequestApproval';
 import WarehouseDispatch from './pages/WarehouseDispatch';
+import WarehouseInventory from './pages/WarehouseInventory';
 import Reports from './pages/Reports';
 import AdminDashboard from './pages/AdminDashboard';
 import SalesActivation from './pages/SalesActivation';
@@ -43,6 +44,7 @@ function App() {
           <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin','manager','tl']}><Layout><Reports /></Layout></ProtectedRoute>} />
 
           {/* Warehouse */}
+          <Route path="/warehouse/inventory" element={<ProtectedRoute allowedRoles={['warehouse', 'admin']}><Layout><WarehouseInventory /></Layout></ProtectedRoute>} />
           <Route path="/warehouse/dispatch" element={<ProtectedRoute allowedRoles={['warehouse', 'admin']}><Layout><WarehouseDispatch /></Layout></ProtectedRoute>} />
 
           {/* Sales */}
