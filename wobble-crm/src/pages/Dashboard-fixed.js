@@ -266,6 +266,7 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-white">{card.value}</p>
               </div>
               <div className="text-white/60 text-xl">{card.icon}</div>
+            </div>
             {isActive(card.key) && (
               <div className="absolute inset-x-0 bottom-0 h-1 bg-white/40 rounded-b-2xl" />
             )}

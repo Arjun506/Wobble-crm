@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiPrinter, FiX } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 
 export default function ReceiptModal({ isOpen, onClose, caseData }) {
     if (!isOpen || !caseData) return null;

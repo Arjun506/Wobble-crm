@@ -4,7 +4,8 @@ import { db, storage } from '../firebase';
 import { doc, getDoc, updateDoc, collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
-import { FiTool, FiPlus, FiCheckCircle, FiCamera, FiUpload, FiSend, FiX, FiFileText, FiTruck, FiPackage, FiUserCheck } from 'react-icons/fi';
+import { FiTool, FiPlus, FiCheckCircle, FiCamera, FiFileText, FiPackage, FiUserCheck } from 'react-icons/fi';
+
 import { sendRepairVisitNotification, sendRepairDoneNotification } from '../utils/messaging';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -26,9 +27,12 @@ export default function ServiceCaseDetail() {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [statusHistory, setStatusHistory] = useState([]);
 
-  const { role, user } = useAuth();
+  const { user } = useAuth();
+
+
 
   const fetchData = useCallback(async () => {
+
     try {
       const docRef = doc(db, 'cases', id);
       const docSnap = await getDoc(docRef);

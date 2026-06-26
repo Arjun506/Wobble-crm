@@ -3,7 +3,8 @@ import { db } from '../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
-import { FiLayers, FiUpload, FiPlusSquare, FiFileText, FiShoppingCart } from 'react-icons/fi';
+import { FiUpload, FiPlusSquare, FiFileText, FiShoppingCart } from 'react-icons/fi';
+
 
 const normalizeKey = (value) => (value || '').toString().trim().toLowerCase();
 

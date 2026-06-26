@@ -1,29 +1,14 @@
-# TODO - Vercel Build Fixes (Wobble CRM)
+# TODO - Production Readiness
 
-## Step 1: Gather build blockers
-- [x] Read Vercel build log errors (unused imports/unused vars)
-- [x] Inspect candidate files: SalesDashboard, SearchCase, ServiceCaseDetail, WarrantyRequest, App.js
-
-## Step 2: Produce edit plan
-- [ ] Confirm complete plan for removing only unused imports/vars (no logic changes)
-
-## Step 3: Apply code fixes
-- [ ] Update SalesDashboard.js (remove unused FiMail, FiMessageCircle, FiEye; remove unused `user` variable or actually use it)
-- [ ] Update SearchCase.js (remove unused FiEye import or use it; remove unused `role` variable if exists)
-- [ ] Update ServiceCaseDetail.js (remove unused FiUpload, FiSend, FiX, FiTruck; remove unused `role` variable if exists; ensure no behavior change)
-- [ ] Update WarrantyRequest.js (remove unused navigate)
-
-## Step 4: Validate routes & imports
-- [ ] Verify all App.js routes point to existing pages
-- [ ] Verify Firebase imports usage
-
-## Step 5: Ensure build
-- [ ] Run `npm install`
-- [ ] Run `npm run build`
-
-## Step 6: Deploy readiness
-- [ ] Confirm Vercel build passes (Compiled successfully)
-
-## Step 7: Deliverables
-- [ ] Provide: list of changed files, full corrected code for each modified file, build status, and deployment status
+## Plan steps
+1. Audit build/lint outputs and fix ESLint warnings + build failures (keep UI and routing intact).
+2. Audit React Hook dependency warnings and fix them without changing behavior.
+3. Remove unused/duplicate imports, unused variables, and any BOM characters.
+4. Make Firebase config production-safe for Vercel (use env vars only; remove hardcoded secrets defaults) and ensure Storage rules + client paths work.
+5. Tighten Firestore security rules to the existing role-based access model used in app (without breaking reads/writes).
+6. Fix any Firestore read/write usage issues found by running the app build + targeted runtime checks.
+7. Ensure Vercel config (rewrites/homepage) supports client-side routing in production.
+8. Re-run `npm run build` and ensure zero warnings/errors.
+9. Produce summary of modified files.
+10. Provide git commands to commit/push.
 
